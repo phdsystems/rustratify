@@ -9,6 +9,9 @@
 //! use rustratify::prelude::*;
 //! ```
 
+// Configuration
+pub use crate::config::{Config, ConfigBuilder, DefaultConfig, FileConfig, MergeableConfig};
+
 // Core traits
 pub use crate::provider::{Provider, ProviderExt};
 

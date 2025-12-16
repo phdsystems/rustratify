@@ -47,6 +47,7 @@
 //! - Async stream utilities for event-driven APIs
 //! - Error types following SEA conventions
 
+mod config;
 mod error;
 mod provider;
 mod registry;
@@ -55,10 +56,13 @@ pub mod stream;
 pub mod prelude;
 
 // Re-export core types
-pub use error::{ProviderError, RegistryError, RustratifyError};
-pub use provider::Provider;
-pub use registry::Registry;
-pub use stream::{EventSender, EventStream, StreamBuilder};
+pub use config::{Config, ConfigBuilder, DefaultConfig, FileConfig, MergeableConfig};
+pub use error::{
+    ProviderError, ProviderResult, RegistryError, RegistryResult, RustratifyError, RustratifyResult,
+};
+pub use provider::{Provider, ProviderExt};
+pub use registry::{Registry, RegistryBuilder};
+pub use stream::{create_stream, EventSender, EventStream, StreamBuilder};
 
 // Re-export async-trait for convenience
 pub use async_trait::async_trait;
