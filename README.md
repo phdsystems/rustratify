@@ -1,5 +1,7 @@
 # Rustratify
 
+> *Layer by layer, build rock-solid Rust.*
+
 **Rustratify** (Rust + Stratify) is a framework for building modular Rust applications using the Stratified Encapsulation Architecture (SEA) pattern.
 
 [![Crates.io](https://img.shields.io/crates/v/rustratify.svg)](https://crates.io/crates/rustratify)
