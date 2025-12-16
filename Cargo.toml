@@ -1,0 +1,28 @@
+[package]
+name = "rustratify"
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+description = "Rustratify - Stratified Encapsulation Architecture (SEA) framework for modular Rust applications"
+repository = "https://github.com/phdsystems/rustratify"
+documentation = "https://docs.rs/rustratify"
+readme = "README.md"
+keywords = ["architecture", "modularity", "sea", "framework", "patterns"]
+categories = ["development-tools", "rust-patterns"]
+authors = ["EngineeringLab Team"]
+
+[dependencies]
+async-trait = "0.1"
+futures-core = "0.3"
+tokio = { version = "1.0", features = ["sync"] }
+tokio-stream = "0.1"
+thiserror = "1.0"
+tracing = "0.1"
+
+[dev-dependencies]
+tokio = { version = "1.0", features = ["full", "test-util"] }
+futures = "0.3"
+
+[features]
+default = []
+full = []
