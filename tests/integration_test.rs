@@ -226,6 +226,56 @@ fn test_provider_supports_path() {
     assert!(!provider.supports_path(Path::new("main.py")));
 }
 
+#[test]
+fn test_cloneable_provider_integration() {
+    let provider = FileProcessor::new("rust", vec![".rs", ".toml"]).with_priority(10);
+
+    // Box as CloneableProvider trait object
+    let boxed: Box<dyn CloneableProvider> = Box::new(provider);
+
+    // Clone the provider
+    let cloned = boxed.clone_box();
+
+    // Verify the clone has the same properties
+    assert_eq!(cloned.name(), "rust");
+    assert_eq!(cloned.extensions(), &[".rs", ".toml"]);
+    assert_eq!(cloned.priority(), 10);
+
+    // Verify the clone works with provider methods
+    assert!(cloned.supports("main.rs"));
+    assert!(cloned.supports("Cargo.toml"));
+    assert!(!cloned.supports("main.py"));
+
+    // Verify we can downcast the clone
+    assert!(cloned.is::<FileProcessor>());
+    let concrete = cloned.downcast_ref::<FileProcessor>();
+    assert!(concrete.is_some());
+    assert_eq!(concrete.unwrap().name, "rust");
+}
+
+#[test]
+fn test_registry_with_cloneable_providers() {
+    let mut registry: Registry<dyn Provider> = Registry::new();
+
+    // Register cloneable providers
+    let rust_provider = FileProcessor::new("rust", vec![".rs"]);
+    let python_provider = FileProcessor::new("python", vec![".py"]).with_priority(5);
+
+    registry.register(Box::new(rust_provider.clone()));
+    registry.register(Box::new(python_provider.clone()));
+
+    // Clone a provider from the registry for modification
+    let boxed: Box<dyn CloneableProvider> = Box::new(rust_provider);
+    let cloned = boxed.clone_box();
+
+    // Original registry is unchanged
+    assert_eq!(registry.len(), 2);
+    assert_eq!(registry.get("rust").unwrap().name(), "rust");
+
+    // We can work with the clone independently
+    assert_eq!(cloned.name(), "rust");
+}
+
 // =============================================================================
 // Stream Tests
 // =============================================================================

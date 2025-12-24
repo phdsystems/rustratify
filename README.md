@@ -173,6 +173,31 @@ pub trait Provider: Send + Sync + Debug {
 }
 ```
 
+### CloneableProvider Trait
+
+For providers that need to be cloned behind trait objects:
+
+```rust
+pub trait CloneableProvider: Provider {
+    fn clone_box(&self) -> Box<dyn CloneableProvider>;
+}
+
+// Automatically implemented for any Provider + Clone
+#[derive(Debug, Clone)]
+struct MyProvider { /* ... */ }
+
+impl Provider for MyProvider { /* ... */ }
+
+// Now you can clone behind trait objects
+let boxed: Box<dyn CloneableProvider> = Box::new(MyProvider::new());
+let cloned = boxed.clone_box();
+```
+
+Use cases:
+- Duplicating provider configurations
+- Creating registry snapshots
+- Implementing fork/copy semantics
+
 ### Registry
 
 ```rust
@@ -186,6 +211,11 @@ impl<P: Provider + ?Sized> Registry<P> {
     pub fn find_best(&self, key: &str) -> Option<&P>;
     pub fn find_all(&self, key: &str) -> Vec<&P>;
     pub fn names(&self) -> Vec<&str>;
+}
+
+// Additional method for cloneable provider registries
+impl Registry<dyn CloneableProvider> {
+    pub fn clone(&self) -> Self;  // Clone registry and all providers
 }
 ```
 

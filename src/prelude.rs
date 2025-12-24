@@ -13,7 +13,7 @@
 pub use crate::config::{Config, ConfigBuilder, DefaultConfig, FileConfig, MergeableConfig};
 
 // Core traits
-pub use crate::provider::{Provider, ProviderExt};
+pub use crate::provider::{CloneableProvider, Provider, ProviderExt};
 
 // Registry
 pub use crate::registry::{Registry, RegistryBuilder};

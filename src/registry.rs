@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use crate::error::{RegistryError, RegistryResult};
-use crate::provider::Provider;
+use crate::provider::{CloneableProvider, Provider};
 
 /// A registry for managing providers.
 ///
@@ -185,6 +185,48 @@ impl<P: Provider + ?Sized> Default for Registry<P> {
     }
 }
 
+impl Registry<dyn CloneableProvider> {
+    /// Clone the registry and all its providers.
+    ///
+    /// This method is only available for registries containing `CloneableProvider` trait objects.
+    /// It creates a new registry with clones of all registered providers, preserving
+    /// registration order.
+    ///
+    /// # Example
+    ///
+    /// ```rust
+    /// use rustratify::{Registry, Provider, CloneableProvider};
+    /// use std::any::Any;
+    ///
+    /// #[derive(Debug, Clone)]
+    /// struct MyProvider {
+    ///     name: String,
+    /// }
+    ///
+    /// impl Provider for MyProvider {
+    ///     fn name(&self) -> &str { &self.name }
+    ///     fn as_any(&self) -> &dyn Any { self }
+    /// }
+    ///
+    /// let mut registry: Registry<dyn CloneableProvider> = Registry::new();
+    /// registry.register(Box::new(MyProvider { name: "test".to_string() }));
+    ///
+    /// // Clone the entire registry
+    /// let cloned = registry.clone();
+    /// assert_eq!(cloned.len(), 1);
+    /// assert!(cloned.contains("test"));
+    /// ```
+    pub fn clone(&self) -> Self {
+        let mut new_registry = Registry::new();
+        for name in &self.ordered {
+            if let Some(provider) = self.providers.get(name) {
+                new_registry.register(provider.clone_box());
+            }
+        }
+        new_registry
+    }
+}
+
 /// Builder for creating registries with fluent API.
 pub struct RegistryBuilder<P: ?Sized> {
     registry: Registry<P>,
@@ -221,7 +263,7 @@ mod tests {
     use super::*;
     use std::any::Any;
 
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     struct TestProvider {
         name: String,
         extensions: Vec<&'static str>,
@@ -320,5 +362,47 @@ mod tests {
             .build();
 
         assert_eq!(registry.len(), 2);
+    }
+
+    #[test]
+    fn test_registry_clone() {
+        let mut registry: Registry<dyn CloneableProvider> = Registry::new();
+
+        // Register multiple providers with different properties
+        registry.register(Box::new(
+            TestProvider::new("rust", vec![".rs"]).with_priority(10),
+        ));
+        registry.register(Box::new(
+            TestProvider::new("python", vec![".py", ".pyw"]).with_priority(5),
+        ));
+        registry.register(Box::new(TestProvider::new("javascript", vec![".js"])));
+
+        // Clone the registry
+        let cloned = registry.clone();
+
+        // Verify the clone has the same providers
+        assert_eq!(cloned.len(), 3);
+        assert!(cloned.contains("rust"));
+        assert!(cloned.contains("python"));
+        assert!(cloned.contains("javascript"));
+
+        // Verify provider properties are preserved
+        let rust_provider = cloned.get("rust").unwrap();
+        assert_eq!(rust_provider.name(), "rust");
+        assert_eq!(rust_provider.extensions(), &[".rs"]);
+        assert_eq!(rust_provider.priority(), 10);
+
+        let python_provider = cloned.get("python").unwrap();
+        assert_eq!(python_provider.priority(), 5);
+        assert_eq!(python_provider.extensions(), &[".py", ".pyw"]);
+
+        // Verify the clone is independent - modify original
+        registry.remove("rust");
+        assert_eq!(registry.len(), 2);
+        assert_eq!(cloned.len(), 3); // Clone should still have all providers
+
+        // Verify registration order is preserved
+        let names: Vec<&str> = cloned.names();
+        assert_eq!(names, vec!["rust", "python", "javascript"]);
     }
 }

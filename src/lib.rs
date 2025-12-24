@@ -60,7 +60,7 @@ pub use config::{Config, ConfigBuilder, DefaultConfig, FileConfig, MergeableConf
 pub use error::{
     ProviderError, ProviderResult, RegistryError, RegistryResult, RustratifyError, RustratifyResult,
 };
-pub use provider::{Provider, ProviderExt};
+pub use provider::{CloneableProvider, Provider, ProviderExt};
 pub use registry::{Registry, RegistryBuilder};
 pub use stream::{create_stream, EventSender, EventStream, StreamBuilder};
 
